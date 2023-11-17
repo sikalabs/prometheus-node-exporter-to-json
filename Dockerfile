@@ -6,6 +6,7 @@ COPY . .
 RUN CGO_ENABLED=0 go build
 
 FROM debian:12-slim
+LABEL org.opencontainers.image.source https://github.com/sikalabs/prometheus-node-exporter-to-json
 COPY \
   --from=builder \
   /build/prometheus-node-exporter-to-json \
