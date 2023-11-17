@@ -1,0 +1,8 @@
+.git
+.dockerignore
+Dockerfile
+.env
+.gitignore
+README.md
+Makefile
+prometheus-node-exporter-to-json
