@@ -15,9 +15,14 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+type Node struct {
+	Instance string
+	Hostname string
+}
+
 var VERSION = "v0.1.0"
 var PROMETHEUS_URL string
-var NODES = []string{}
+var NODES = []Node{}
 var HOSTNAME string
 
 func memAvailableBytes(node string) (float64, error) {
@@ -80,6 +85,7 @@ func cpuCoresCount(node string) (float64, error) {
 
 type NodeMetrics struct {
 	Instance                 string  `json:"instance"`
+	Hostname                 string  `json:"hostname"`
 	MemTotalBytes            float64 `json:"mem_total_bytes"`
 	MemAvailableBytes        float64 `json:"mem_available_bytes"`
 	MemUsagePercent          float64 `json:"mem_usage_percent"`
@@ -108,11 +114,23 @@ func main() {
 	if PROMETHEUS_URL == "" {
 		logFatal("environment vaiable PROMETHEUS_URL is required")
 	}
-	NODES_LIST := os.Getenv("NODES")
-	if NODES_LIST == "" {
+	nodesListEnv := os.Getenv("NODES")
+	if nodesListEnv == "" {
 		logFatal("environment vaiable NODES is required")
 	}
-	NODES = strings.Split(NODES_LIST, ",")
+	nodesEnv := strings.Split(nodesListEnv, ",")
+	for _, nodeEnv := range nodesEnv {
+		nodeEnvSplit := strings.Split(nodeEnv, "=")
+		instance := nodeEnvSplit[0]
+		hostname := ""
+		if len(nodeEnvSplit) > 1 {
+			hostname = nodeEnvSplit[1]
+		}
+		NODES = append(NODES, Node{
+			Instance: instance,
+			Hostname: hostname,
+		})
+	}
 
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 
@@ -126,25 +144,26 @@ func main() {
 		isOK := true
 		metrics := []NodeMetrics{}
 		for _, node := range NODES {
-			memTotalBytes, err := memTotalBytes(node)
+			memTotalBytes, err := memTotalBytes(node.Instance)
 			isOK = isOK && err == nil
-			memAvailableBytes, err := memAvailableBytes(node)
+			memAvailableBytes, err := memAvailableBytes(node.Instance)
 			isOK = isOK && err == nil
-			memUsagePercent, err := memUsagePercent(node)
+			memUsagePercent, err := memUsagePercent(node.Instance)
 			isOK = isOK && err == nil
-			fileSystemAvailableBytes, err := fileSystemAvailableBytes(node)
+			fileSystemAvailableBytes, err := fileSystemAvailableBytes(node.Instance)
 			isOK = isOK && err == nil
-			fileSystemTotalBytes, err := fileSystemTotalBytes(node)
+			fileSystemTotalBytes, err := fileSystemTotalBytes(node.Instance)
 			isOK = isOK && err == nil
-			fileSystemUsagePercent, err := fileSystemUsagePercent(node)
+			fileSystemUsagePercent, err := fileSystemUsagePercent(node.Instance)
 			isOK = isOK && err == nil
-			cpuUsagePercent, err := cpuUsagePercent(node)
+			cpuUsagePercent, err := cpuUsagePercent(node.Instance)
 			isOK = isOK && err == nil
-			cpuCoresCount, err := cpuCoresCount(node)
+			cpuCoresCount, err := cpuCoresCount(node.Instance)
 			isOK = isOK && err == nil
 
 			metrics = append(metrics, NodeMetrics{
-				Instance:                 node,
+				Instance:                 node.Instance,
+				Hostname:                 node.Hostname,
 				MemTotalBytes:            memTotalBytes,
 				MemAvailableBytes:        memAvailableBytes,
 				MemUsagePercent:          memUsagePercent,
