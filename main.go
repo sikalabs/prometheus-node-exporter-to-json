@@ -20,7 +20,7 @@ type Node struct {
 	Hostname string
 }
 
-var VERSION = "v0.1.0"
+var VERSION = "v0.2.0"
 var PROMETHEUS_URL string
 var NODES = []Node{}
 var HOSTNAME string

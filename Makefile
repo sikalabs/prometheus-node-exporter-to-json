@@ -1,4 +1,4 @@
-TAG = v0.1.0
+TAG = v0.2.0
 IMAGE = sikalabs/prometheus-node-exporter-to-json
 IMAGE_LATEST = ${IMAGE}:latest
 IMAGE_TAGGED = ${IMAGE}:${TAG}
