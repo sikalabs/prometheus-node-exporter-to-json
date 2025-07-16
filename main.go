@@ -73,7 +73,11 @@ func fileSystemUsagePercent(node string) (float64, error) {
 
 func cpuUsagePercent(node string) (float64, error) {
 	return queryPrometheusToValue(
-		`(1 - avg by (instance) (rate(node_cpu_seconds_total{mode="idle",  instance="` + node + `"}[5m]))) * 100`,
+		`100 *
+    (
+      1 - sum without(cpu,mode) (rate(node_cpu_seconds_total{mode=~"idle|iowait|steal", instance="` + node + `"}[10m])) /
+      count without(cpu,mode) (node_cpu_seconds_total{mode="idle", instance="` + node + `"})
+    )`,
 	)
 }
 
